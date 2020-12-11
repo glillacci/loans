@@ -1,4 +1,4 @@
-# Loan outcome prediction
+# Loan application outcome prediction
 
 ## About the data set
 The file in `./data/loan_data.csv` contains old data on 1000 loan applications
