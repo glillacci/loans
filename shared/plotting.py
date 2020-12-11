@@ -38,7 +38,7 @@ def percentage_stacked_bar_plot(groups, outcome, data, baseline=0.7, bar_width=0
     loc = list(range(len(totals)))
 
     # Plot
-    fig = plt.figure(figsize=(12, 6))
+    fig = plt.figure(figsize=(10, 5))
     plt.bar(loc, green_bars[r], color='#b5ffb9', edgecolor='white', width=bar_width)
     plt.bar(loc, orange_bars[r], bottom=green_bars[r], color='#f9bc86', edgecolor='white', width=bar_width)
     plt.hlines(baseline, min(r) - bar_width / 2, max(r) + bar_width / 2, linestyles='dashed')
