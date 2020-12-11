@@ -1,4 +1,6 @@
-"""Functions to handle data."""
+"""Functions that process data for modelling."""
+
+from sklearn.base import BaseEstimator, TransformerMixin
 
 
 def encode_categorical(data, features, target):
@@ -25,15 +27,38 @@ def encode_categorical(data, features, target):
         data with encoded features added
 
     """
+    out_df = data.copy()
     for feature in features:
         encoding = (
-            data.groupby(feature)
-                .agg({target: 'mean'})
-                .sort_values(target)
-                .reset_index()
-                .reset_index()
-                .set_index(feature)
+            out_df.groupby(feature)
+                  .agg({target: 'mean'})
+                  .sort_values(target)
+                  .reset_index()
+                  .reset_index()
+                  .set_index(feature)
         )
         level_map = encoding['index'].to_dict()
-        data[f'{feature}_encoded'] = data[feature].map(level_map)
-    return data
+        out_df[f'{feature}_encoded'] = out_df[feature].map(level_map).astype(float)
+    return out_df
+
+
+class CategoricalEncoder(BaseEstimator, TransformerMixin):
+    """
+    Wrap encode_categorical into a scikit-learn estimator.
+
+    This enables the categorical encoding to be used in a Pipeline object.
+
+    """
+
+    def __init__(self, features_to_encode, target, features_to_return):
+        self.features_to_encode = features_to_encode
+        self.target = target
+        self.features_to_return = features_to_return
+
+    def fit(self, X, y):
+        return self
+
+    def transform(self, X, y=None):
+        X_cat = X.copy()
+        X_cat = encode_categorical(X_cat, self.features_to_encode, self.target)
+        return X_cat[self.features_to_return]
