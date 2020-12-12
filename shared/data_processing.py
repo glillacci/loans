@@ -19,9 +19,8 @@ class CategoricalEncoder(BaseEstimator, TransformerMixin):
 
     """
 
-    def __init__(self, features_to_encode: List[str], mode: str = 'fraction') -> None:
+    def __init__(self, features_to_encode: List[str]) -> None:
         self.features_to_encode = features_to_encode
-        self.mode = mode
         self.mappings = {}
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> 'CategoricalEncoder':
@@ -39,10 +38,7 @@ class CategoricalEncoder(BaseEstimator, TransformerMixin):
                                    .reset_index()
                                    .set_index(feature)
             )
-            if self.mode == 'fraction':
-                level_map = encoding[y.name].to_dict()
-            else:
-                level_map = encoding['index'].to_dict()
+            level_map = encoding['index'].to_dict()
             self.mappings[feature] = level_map
         return self
 
