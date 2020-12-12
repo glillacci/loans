@@ -2,9 +2,11 @@
 
 import numpy as np
 from matplotlib import pyplot as plt
+import pandas as pd
 
 
-def percentage_stacked_bar_plot(groups, outcome, data, baseline=0.7, bar_width=0.85):
+def percentage_stacked_bar_plot(groups: str, outcome: str, data: pd.DataFrame,
+                                baseline: float = 0.7, bar_width: float = 0.85) -> None:
     """
     Generate a percentage stacked bar plot.
 

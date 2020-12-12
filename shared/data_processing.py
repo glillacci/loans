@@ -1,64 +1,75 @@
-"""Functions that process data for modelling."""
+"""Classes that process the data using Scikit-learn Pipeline objects."""
 
+import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
-
-
-def encode_categorical(data, features, target):
-    """
-    Encode categorical features based on effect on target.
-
-    Map each level of the categorical variables to an integer, based on
-    how the levels affect the percentage of positive examples in target.
-    Encoded features are added to data
-
-    Parameters
-    ----------
-    data: pandas.DataFrame
-        Data frame containing the data.
-    features: List[str]
-        Names of the columns of data containing the categorical features
-        to encode.
-    target: str
-        Name of the target column.
-
-    Returns
-    -------
-    pandas.DataFrame
-        data with encoded features added
-
-    """
-    out_df = data.copy()
-    for feature in features:
-        encoding = (
-            out_df.groupby(feature)
-                  .agg({target: 'mean'})
-                  .sort_values(target)
-                  .reset_index()
-                  .reset_index()
-                  .set_index(feature)
-        )
-        level_map = encoding['index'].to_dict()
-        out_df[f'{feature}_encoded'] = out_df[feature].map(level_map).astype(float)
-    return out_df
+from typing import List
 
 
 class CategoricalEncoder(BaseEstimator, TransformerMixin):
     """
-    Wrap encode_categorical into a scikit-learn estimator.
+    Target encoding of categorical variables.
 
-    This enables the categorical encoding to be used in a Pipeline object.
+    Map each level of the categorical variables to an integer. The integer values
+    are increasing with the percentage of positive examples found in the level.
+
+    Parameters
+    ----------
+    features_to_encode: List[str]
+        Names of the categorical features to be encoded this way.
 
     """
 
-    def __init__(self, features_to_encode, target, features_to_return):
+    def __init__(self, features_to_encode: List[str], mode: str = 'fraction') -> None:
         self.features_to_encode = features_to_encode
-        self.target = target
-        self.features_to_return = features_to_return
+        self.mode = mode
+        self.mappings = {}
 
-    def fit(self, X, y):
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> 'CategoricalEncoder':
+        """
+        Learn mapping from categorical levels to integers.
+
+        """
+        for feature in self.features_to_encode:
+            feature_with_target = pd.concat([X[feature], y], axis=1)
+            encoding = (
+                feature_with_target.groupby(feature)
+                                   .agg({y.name: 'mean'})
+                                   .sort_values(y.name, ascending=False)
+                                   .reset_index()
+                                   .reset_index()
+                                   .set_index(feature)
+            )
+            if self.mode == 'fraction':
+                level_map = encoding[y.name].to_dict()
+            else:
+                level_map = encoding['index'].to_dict()
+            self.mappings[feature] = level_map
         return self
 
-    def transform(self, X, y=None):
-        X_cat = X.copy()
-        X_cat = encode_categorical(X_cat, self.features_to_encode, self.target)
-        return X_cat[self.features_to_return]
+    def transform(self, X: pd.DataFrame, y: pd.Series = None):
+        """
+        Apply the mapping to the categorical features.
+
+        """
+        if self.mappings is None:
+            raise ValueError('Categorical mapping has not been learnt.')
+
+        X_out = X.copy()
+
+        for feature in self.features_to_encode:
+            X_out[feature] = X_out[feature].map(self.mappings[feature])
+
+        return X_out
+
+
+class FeatureSelector(BaseEstimator, TransformerMixin):
+    """Select features from a Pandas data frame."""
+
+    def __init__(self, features_to_select: List[str]) -> None:
+        self.features_to_select = features_to_select
+
+    def fit(self, X: pd.DataFrame, y: pd.Series = None) -> 'FeatureSelector':
+        return self
+
+    def transform(self, X: pd.DataFrame, y: pd.Series = None) -> pd.DataFrame:
+        return X[self.features_to_select]
