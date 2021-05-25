@@ -1,4 +1,4 @@
-"""Classes that process the data using Scikit-learn Pipeline objects."""
+"""Classes that process the data using scikit-learn Pipeline objects."""
 
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -12,20 +12,28 @@ class CategoricalEncoder(BaseEstimator, TransformerMixin):
     Map each level of the categorical variables to an integer. The integer values
     are increasing with the percentage of positive examples found in the level.
 
-    Parameters
-    ----------
-    features_to_encode: List[str]
-        Names of the categorical features to be encoded this way.
-
     """
-
     def __init__(self, features_to_encode: List[str]) -> None:
+        """
+        Create a new class instance.
+
+        Args:
+            features_to_encode: names of the categorical features to be encoded this way.
+
+        """
         self.features_to_encode = features_to_encode
         self.mappings = {}
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> 'CategoricalEncoder':
         """
         Learn mapping from categorical levels to integers.
+
+        Args:
+            X: DataFrame with features to encode.
+            y: labels to use for target encoding learning.
+
+        Returns:
+            fitted CategoricalEncoder instance.
 
         """
         for feature in self.features_to_encode:
@@ -42,9 +50,16 @@ class CategoricalEncoder(BaseEstimator, TransformerMixin):
             self.mappings[feature] = level_map
         return self
 
-    def transform(self, X: pd.DataFrame, y: pd.Series = None):
+    def transform(self, X: pd.DataFrame, y: pd.Series = None) -> pd.DataFrame:
         """
         Apply the mapping to the categorical features.
+
+        Args:
+            X:
+            y:
+
+        Returns:
+            DataFrame with target-encoded categorical features.
 
         """
         if self.mappings is None:
@@ -59,9 +74,18 @@ class CategoricalEncoder(BaseEstimator, TransformerMixin):
 
 
 class FeatureSelector(BaseEstimator, TransformerMixin):
-    """Select features from a Pandas data frame."""
+    """
+    Select features from a Pandas data frame.
 
+    """
     def __init__(self, features_to_select: List[str]) -> None:
+        """
+        Create a new class instance.
+
+        Args:
+            features_to_select: features to return as output.
+
+        """
         self.features_to_select = features_to_select
 
     def fit(self, X: pd.DataFrame, y: pd.Series = None) -> 'FeatureSelector':
