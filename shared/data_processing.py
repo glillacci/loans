@@ -55,8 +55,8 @@ class CategoricalEncoder(BaseEstimator, TransformerMixin):
         Apply the mapping to the categorical features.
 
         Args:
-            X:
-            y:
+            X: DataFrame with features to encode.
+            y: not used.
 
         Returns:
             DataFrame with target-encoded categorical features.
